@@ -30,6 +30,7 @@ CLANG_TYPE=custom CUST_DIR=/path/to/clang bash do_build.sh ginkgo kc
 
 On Ubuntu, automatic dependency installation can be explicitly enabled with
 `INSTALL_DEPS=1`. Uploads are disabled unless an upload option is passed.
+DroidSpaces container support is opt-in through `DROIDSPACES=1`.
 
 Build artifacts are written to the parent workspace as
 `Avalanche_<version>-<variant>-ginkgo-<timestamp>.zip`.

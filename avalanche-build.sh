@@ -145,8 +145,8 @@ AVK_VER="v1.0"
 # Toggles
 USE_CCACHE=1
 
-# Droidspaces support
-DROIDSPACES=1
+# DroidSpaces support is opt-in for container-oriented builds.
+DROIDSPACES=${DROIDSPACES:-0}
 
 ## Parse arguments
 DO_KSU=0

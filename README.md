@@ -2,9 +2,13 @@
 
 # Avalanche Kernel
 
-Avalanche is an Android kernel for the Qualcomm Trinket platform, focused on
-the Xiaomi Redmi Note 8 and Redmi Note 8T (`ginkgo` and `willow`). It is based
-on Linux 4.14 with the extended OpenELA stable updates.
+Avalanche is a custom Android kernel for the Xiaomi Redmi Note 8 and Redmi
+Note 8T (`ginkgo` and `willow`), built on the OpenELA-maintained Linux 4.14.357
+kernel and using the
+[FlopKernel-Series trinket kernel](https://github.com/FlopKernel-Series/flop_trinket-mi_kernel)
+as its device-specific baseline. Avalanche is developed and maintained
+independently, with credit to FlopKernel-Series, Flopster101, and previous
+contributors for the inherited Qualcomm Trinket and ginkgo/willow support.
 
 ## Highlights
 

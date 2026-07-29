@@ -773,6 +773,7 @@ post_build() {
     ## Prepare kernel flashable zip
     cd "$AK3_DIR"
     git checkout "$AK3_BRANCH" &> /dev/null
+    cp "$KDIR/packaging/anykernel/banner" banner
     sed -i "s#^kernel.string=.*#kernel.string=Avalanche Kernel $AVK_VER $CK_TYPE | @willtanoe#" anykernel.sh
     zip -r9 "$ZIP_PATH" * -x '*.git*' README.md *placeholder
     cd ..

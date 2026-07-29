@@ -103,6 +103,14 @@ config KSU_ALLOWLIST_WORKAROUND
 	  Useful for situations where the SU allowlist is not kept after a reboot.
 
 # Load variant-specific configs
+if KSU_NEXT
 source "drivers/kernelsu/kernel/Kconfig"
+endif
+
+if KSU_SUKI
 source "drivers/sukisu/kernel/Kconfig"
+endif
+
+if KSU_XXKSU
 source "drivers/xxksu/kernel/Kconfig"
+endif

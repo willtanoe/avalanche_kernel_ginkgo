@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# Build script for FloppyKernel (ginkgo).
+# Build script for Avalanche Kernel (ginkgo).
 # Based on build script for Quicksilver, by Ghostrider.
 # Copyright (C) 2020-2021 Adithya R. (original version)
 # Copyright (C) 2022-2025 Flopster101 (rewrite)
+# Copyright (C) 2026 willtanoe (Avalanche Kernel)
 
 ## Variables
 # Toolchains
@@ -80,14 +81,14 @@ if [[ ! -d drivers ]]; then
 fi
 
 if [[ "$IS_GP" == "1" ]]; then
-    export KBUILD_BUILD_USER="Flopster101"
-    export KBUILD_BUILD_HOST="buildbot"
+    export KBUILD_BUILD_USER="willtanoe"
+    export KBUILD_BUILD_HOST="avalanche-buildbot"
 fi
 
 # Other
 DEFAULT_DEFCONFIG="vendor/trinket-perf_defconfig"
 BASE_FRAGMENT="vendor/xiaomi-trinket.config"
-KERNEL_URL="https://github.com/Flopster101/flop_ginkgo_kernel"
+KERNEL_URL="https://github.com/willtanoe/avalanche_kernel_ginkgo"
 SECONDS=0 # builtin bash timer
 DATE="$(date '+%Y%m%d-%H%M')"
 BUILD_HOST="$USER@$(hostname)"
@@ -138,8 +139,8 @@ fi
 
 ## Customizable vars
 
-# FloppyKernel version
-FK_VER="v2.0b"
+# Avalanche Kernel version
+AVK_VER="v1.0"
 
 # Toggles
 USE_CCACHE=1
@@ -222,9 +223,6 @@ fi
 TEST_CHANNEL=1
 #TEST_BUILD=0
 
-# Upload build log
-LOG_UPLOAD=1
-
 # Pick aosp, proton, rm69, lolz, slim, greenforce, zyc, rv, custom
 if [[ -z "$CLANG_TYPE" ]]; then
     CLANG_TYPE="aosp"
@@ -232,13 +230,15 @@ else
     echo -e "\nINFO: Overriding default toolchain"
 fi
 
-## Secrets
-if [[ "$TEST_CHANNEL" == "0" ]]; then
-    TELEGRAM_CHAT_ID="$(cat ../chat)"
-elif [[ "$TEST_CHANNEL" == "1" ]]; then
-    TELEGRAM_CHAT_ID="$(cat ../chat_test)"
+## Telegram secrets are only needed for an explicitly requested upload.
+if [[ "$DO_TG" == "1" ]]; then
+    if [[ "$TEST_CHANNEL" == "0" ]]; then
+        TELEGRAM_CHAT_ID="$(cat ../chat)"
+    elif [[ "$TEST_CHANNEL" == "1" ]]; then
+        TELEGRAM_CHAT_ID="$(cat ../chat_test)"
+    fi
+    TELEGRAM_BOT_TOKEN="$(cat ../bot_token)"
 fi
-TELEGRAM_BOT_TOKEN="$(cat ../bot_token)"
 
 ## Build type
 LINUX_VER=$(make kernelversion 2>/dev/null)
@@ -264,12 +264,12 @@ else
     CK_TYPE="Vanilla"
     CK_TYPE_SHORT="V"
 fi
-ZIP_PATH="$WP/Floppy_$FK_VER-$CK_TYPE-$CODENAME-$DATE.zip"
+ZIP_PATH="$WP/Avalanche_$AVK_VER-$CK_TYPE-$CODENAME-$DATE.zip"
 
 echo -e "\nINFO: Build info:
 - Device: $DEVICE ($CODENAME)
 - Addons: $CK_TYPE
-- Floppy version: $FK_VER
+- Avalanche version: $AVK_VER
 - Linux version: $LINUX_VER
 - Defconfig: $DEFCONFIG
 - Build date: $DATE
@@ -546,7 +546,9 @@ prep_toolchain() {
 }
 
 ## Pre-build dependencies
-install_deps_deb
+if [[ "$INSTALL_DEPS" == "1" ]]; then
+    install_deps_deb
+fi
 get_toolchain "$CLANG_TYPE"
 prep_toolchain "$CLANG_TYPE"
 
@@ -638,10 +640,10 @@ build() {
     fi
 
     if [[ "$IS_RELEASE" == "1" ]]; then
-        VERSION_STR="\"-Floppy-$FK_VER-$CK_TYPE_SHORT-release\""
+        VERSION_STR="\"-Avalanche-$AVK_VER-$CK_TYPE_SHORT-release\""
         VERSION_NOAUTO=1
     else
-        VERSION_STR="\"-Floppy-$FK_VER-$CK_TYPE_SHORT\""
+        VERSION_STR="\"-Avalanche-$AVK_VER-$CK_TYPE_SHORT\""
     fi
 
     if [[ "$CKB_CRASHKEY" == "1" ]]; then
@@ -732,16 +734,14 @@ post_build() {
             echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
         else
             echo -e "\nERROR: Kernel files not found! Compilation failed?"
-            echo -e "\nINFO: Uploading log to 0x0.st\n"
-            curl -F'file=@log.txt' http://0x0.st || echo "WARNING: Failed to upload log to 0x0.st (ignored)"
+            echo "INFO: Review $KDIR/log.txt for details."
             exit 1
         fi
     elif [[ -f "$OUT_IMAGE" ]] && [[ -f "$OUT_DTBO" ]] && [[ -f "$OUT_DTB" ]]; then
         echo -e "\nINFO: Kernel compiled succesfully! Zipping up..."
     else
         echo -e "\nERROR: Kernel files not found! Compilation failed?"
-        echo -e "\nINFO: Uploading log to 0x0.st\n"
-        curl -F'file=@log.txt' http://0x0.st || echo "WARNING: Failed to upload log to 0x0.st (ignored)"
+        echo "INFO: Review $KDIR/log.txt for details."
         exit 1
     fi
 
@@ -773,6 +773,7 @@ post_build() {
     ## Prepare kernel flashable zip
     cd "$AK3_DIR"
     git checkout "$AK3_BRANCH" &> /dev/null
+    sed -i "s#^kernel.string=.*#kernel.string=Avalanche Kernel $AVK_VER $CK_TYPE | @willtanoe#" anykernel.sh
     zip -r9 "$ZIP_PATH" * -x '*.git*' README.md *placeholder
     cd ..
     rm -rf "$AK3_DIR"
@@ -798,12 +799,8 @@ upload() {
             tgs "$ZIP_PATH"
             echo "INFO: Done!"
     fi
-    if [[ "$LOG_UPLOAD" == "1" ]]; then
-        echo -e "\nINFO: Uploading log to 0x0.st\n"
-        curl -F'file=@log.txt' http://0x0.st || echo "WARNING: Failed to upload log to 0x0.st (ignored)"
-    fi
     # Delete any leftover zip files
-    # rm -f "$WP/FloppyKernel*zip"
+    # rm -f "$WP/Avalanche_*zip"
 }
 
 clean() {

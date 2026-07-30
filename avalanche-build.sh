@@ -776,8 +776,7 @@ post_build() {
     cp "$KDIR/packaging/anykernel/banner" banner
     sed -i "s#^kernel.string=.*#kernel.string=Avalanche Kernel $AVK_VER $CK_TYPE | @willtanoe#" anykernel.sh
     zip -r9 "$ZIP_PATH" * -x '*.git*' README.md *placeholder
-    cd ..
-    rm -rf "$AK3_DIR"
+    cd "$KDIR"
     echo -e "\nINFO: Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
     echo "Zip: $ZIP_PATH"
     echo " "
@@ -786,7 +785,6 @@ post_build() {
     else
         rm -rf "$AK3_DIR"
     fi
-    cd "$KDIR"
 }
 
 upload() {
@@ -807,6 +805,7 @@ upload() {
 clean() {
     make O=out clean
     make O=out mrproper
+    rm -rf out/.thinlto-cache
 }
 
 clean_tmp() {
@@ -814,6 +813,7 @@ clean_tmp() {
     rm -f "$OUT_IMAGE"
     rm -f "$OUT_DTBO"
     rm -rf "$DTBO_TMP"
+    rm -rf out/.thinlto-cache
 }
 
 ## Run build

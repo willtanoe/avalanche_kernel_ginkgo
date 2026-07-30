@@ -44,6 +44,7 @@ modules.builtin
 #
 # Top-level generic files
 #
+/AGENTS.md
 /tags
 /TAGS
 /linux
